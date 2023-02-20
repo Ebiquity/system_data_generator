@@ -6,8 +6,10 @@ CAMERA_IP = "192.168.1.122"
 COMPUTER_IP = "192.168.1.156"
 DOMAIN_IP = "3.219.52.34"
 
-CAM_PORT = "63542"
-DOM_PORT = "443"
+CAM_PORT = 63542
+DOM_PORT = 443
+
+global start_time
 
 
 def get_time(row):
@@ -16,6 +18,7 @@ def get_time(row):
     start_time = row["Time"]
 
     return time
+
 
 def transform_IP(row, col):
     if row[col] == GATEWAY_IP:
@@ -28,10 +31,15 @@ def transform_IP(row, col):
         return "DOMAIN_IP"
 
 def transform_port(row, col):
+    print(row[col])
+    print(type(row[col]))
+
     if row[col] == CAM_PORT:
         return "CAM_PORT"
-    elif row[col] == CAMERA_IP:
+    elif row[col] == DOM_PORT:
         return "DOM_PORT"
+    else:
+        return row[col]
 
 def get_extra(row):
     if not pd.isnull(row["Extra"]):
@@ -119,36 +127,38 @@ def get_info(row):
             return "TCP unseen segment"
 
 
-df = pd.read_csv("./data/network_traffic_data.csv")
-cols = ["Source", "Source Port", "Destination", "Destination Port", "Protocol", "Length", "Info", "Extra"]
-print(df.shape)
+def pre_process_network_traffic_data():
+    df = pd.read_csv("./data/network_traffic_data.csv")
+    cols = ["Source", "Source Port", "Destination", "Destination Port", "Protocol", "Length", "Info", "Extra"]
+    print(df.shape)
 
-start_time = df['Time'].iloc[0].astype(float)
+    global start_time
+    start_time = df['Time'].iloc[0].astype(float)
 
-df[cols] = df[cols].fillna('NULL')
-df['Info'] = df.apply(lambda row: remove_sequence(row), axis=1)
+    df[cols] = df[cols].fillna('NULL')
+    df['Info'] = df.apply(lambda row: remove_sequence(row), axis=1)
 
-df['repeats'] = df.groupby(cols)['Info'].transform('size')
-cols += ["repeats"]
-df = df.drop_duplicates(subset=cols, keep='first').reset_index(drop=True)
+    df['repeats'] = df.groupby(cols)['Info'].transform('size')
+    cols += ["repeats"]
+    df = df.drop_duplicates(subset=cols, keep='first').reset_index(drop=True)
 
-df['Time'] = df.apply(lambda row: get_time(row), axis=1)
-df['Source'] = df.apply(lambda row: transform_IP(row, "Source"), axis=1)
-df['Destination'] = df.apply(lambda row: transform_IP(row, "Destination"), axis=1)
-df['Source Port'] = df.apply(lambda row: transform_port(row, "Source Port"), axis=1)
-df['Destination Port'] = df.apply(lambda row: transform_port(row, "Destination Port"), axis=1)
+    df['Time'] = df.apply(lambda row: get_time(row), axis=1)
+    df['Source'] = df.apply(lambda row: transform_IP(row, "Source"), axis=1)
+    df['Destination'] = df.apply(lambda row: transform_IP(row, "Destination"), axis=1)
+    df['Source Port'] = df.apply(lambda row: transform_port(row, "Source Port"), axis=1)
+    df['Destination Port'] = df.apply(lambda row: transform_port(row, "Destination Port"), axis=1)
 
-df['Event'] = df.apply(lambda row: get_info(row), axis=1)
-df['Seq'] = df.apply(lambda row: get_extra(row).get("Seq") if not pd.isnull(get_extra(row)) else 'NULL', axis=1)
-df['Ack'] = df.apply(lambda row: get_extra(row).get("Ack") if not pd.isnull(get_extra(row)) else 'NULL', axis=1)
-df['Win'] = df.apply(lambda row: get_extra(row).get("Win") if not pd.isnull(get_extra(row)) else 'NULL', axis=1)
-df['Len'] = df.apply(lambda row: get_extra(row).get("Len") if not pd.isnull(get_extra(row)) else 'NULL', axis=1)
-df['MSS'] = df.apply(lambda row: get_extra(row).get("MSS") if not pd.isnull(get_extra(row)) else 'NULL', axis=1)
+    df['Event'] = df.apply(lambda row: get_info(row), axis=1)
+    df['Seq'] = df.apply(lambda row: get_extra(row).get("Seq") if not pd.isnull(get_extra(row)) else 'NULL', axis=1)
+    df['Ack'] = df.apply(lambda row: get_extra(row).get("Ack") if not pd.isnull(get_extra(row)) else 'NULL', axis=1)
+    df['Win'] = df.apply(lambda row: get_extra(row).get("Win") if not pd.isnull(get_extra(row)) else 'NULL', axis=1)
+    df['Len'] = df.apply(lambda row: get_extra(row).get("Len") if not pd.isnull(get_extra(row)) else 'NULL', axis=1)
+    df['MSS'] = df.apply(lambda row: get_extra(row).get("MSS") if not pd.isnull(get_extra(row)) else 'NULL', axis=1)
 
-df = df.drop(['No.', 'Info', 'Extra'], axis=1)
+    df = df.drop(['No.', 'Info', 'Extra'], axis=1)
 
-print(df.shape)
-# df['repeats'] = df.groupby(df["Info"].ne(df["Info"].shift()).cumsum())["Info"].transform('size')
-# cols = ["Source", "Source Port", "Destination", "Destination Port", "Protocol", "Length", "Info", "Extra
+    print(df.shape)
+    # df['repeats'] = df.groupby(df["Info"].ne(df["Info"].shift()).cumsum())["Info"].transform('size')
+    # cols = ["Source", "Source Port", "Destination", "Destination Port", "Protocol", "Length", "Info", "Extra
 
-df.to_csv("./data/processed_data.csv", index=False)
+    df.to_csv("./data/processed_network_traffic_data.csv", index=False)
