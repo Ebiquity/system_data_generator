@@ -1,4 +1,9 @@
 # Byte-compiled / optimized / DLL files
+*/network_traffic_data.csv
+.DS_Store
+*/.DS_Store
+.idea/
+
 __pycache__/
 *.py[cod]
 *$py.class
