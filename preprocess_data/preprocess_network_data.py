@@ -135,7 +135,7 @@ def get_info(row):
 
 
 def pre_process_network_traffic_data():
-    df = pd.read_csv("../data/network_traffic_data.csv")
+    df = pd.read_csv("../input_data/network_traffic_data.csv")
     cols = ["Source", "Source Port", "Destination", "Destination Port", "Protocol", "Length", "Info", "Extra"]
     print(df.shape)
 
@@ -168,4 +168,4 @@ def pre_process_network_traffic_data():
     # df['repeats'] = df.groupby(df["Info"].ne(df["Info"].shift()).cumsum())["Info"].transform('size')
     # cols = ["Source", "Source Port", "Destination", "Destination Port", "Protocol", "Length", "Info", "Extra
 
-    df.to_csv("./data/processed_network_traffic_data.csv", index=False)
+    df.to_csv("./input_data/processed_network_traffic_data.csv", index=False)

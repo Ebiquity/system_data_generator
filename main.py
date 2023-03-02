@@ -13,20 +13,20 @@ GENERATE_MEMORY_ACTIVITY = True
 if GENERATE_NETWORK_TRAFFIC:
     pre_process_network_traffic_data()
 
-    df = pd.read_csv("./data/processed_network_traffic_data.csv")
+    df = pd.read_csv("input_data/processed_input_data/processed_network_traffic_data.csv")
     generator_model = NetworkGeneratorModel(df)
     generator_model.train_and_save_ctgan("./trained_generator/network_traffic_data_generator.pth")
 
     generator = NetworkDataGenerator("./trained_generator/network_traffic_data_generator.pth")
-    generator.sample_network_traffic_data("./synthetic_data/network_traffic_data.csv")
-    postprocess_network_traffic_data("./synthetic_data/network_traffic_data.csv",
-                                     "./results/generated_network_traffic_data.csv")
+    generator.sample_network_traffic_data("./raw_synthetic_data/network_traffic_data.csv")
+    postprocess_network_traffic_data("output_data/raw_synthetic_data/network_traffic_data.csv",
+                                     "output_data/generated_network_traffic_data.csv")
 
 if GENERATE_MEMORY_ACTIVITY:
-    df = pd.read_csv("./data/memory_activity_data.csv")
+    df = pd.read_csv("input_data/memory_activity_data.csv")
     generator_model = CpuGeneratorModel(df)
     # generator_model.train_and_save_ctgan("./trained_generator/cpu_usage_data_generator.pth")
 
     generator = CPUUsageGenerator("./trained_generator/cpu_usage_data_generator.pth")
-    generator.generate_cpu_usage_data("./synthetic_data/cpu_usage_data.csv")
+    generator.generate_cpu_usage_data("./output_data/generated_cpu_usage_data.csv")
 
